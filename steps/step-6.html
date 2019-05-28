@@ -14,7 +14,7 @@
 <body>
   <div id="map"></div>
   <aside class="toolbox">
-    <div class="box">
+    <section class="box">
       <header>
         <h1>Crime Reports 2019</h1>
       </header>
@@ -27,7 +27,7 @@
         </div>
       </section>
       <footer class="js-footer"></footer>
-    </div>
+    </section>
   </aside>
   <div id="loader">
     <div class="CDB-LoaderIcon CDB-LoaderIcon--big">
@@ -45,12 +45,13 @@
       scrollZoom: false
     });
 
+    // Create expressions constant
+    const s = carto.expressions;
+
     const nav = new mapboxgl.NavigationControl({
       showCompass: false
     });
     map.addControl(nav, 'top-left');
-
-    const s = carto.expressions;
 
     // Define user
     carto.setDefaultAuth({
@@ -65,147 +66,147 @@
 
     const viz = new carto.Viz(`
       @days: ["${days.join('","')}"]
+      @cluster_mode_day: clusterMode($incident_day_of_week)
       @count: clusterCount()
-      @v_features: viewportFeatures(@count)
+      @viewport_features: viewportFeatures(@count)
 
       strokeWidth: 0
       width: sqrt(@count)
-      color: ramp(clusterMode($incident_day_of_week), bold)
-      // color: ramp(buckets(clusterMode($incident_day_of_week), @days), bold)
+      color: ramp(@cluster_mode_day, bold)
+      
       resolution: 16
-
-      filter: clusterMode($incident_day_of_week) in @days
       order: asc(width())
+      
+      filter: @cluster_mode_day in @days
     `);
-
-    const LABELS_CONFIG = {
-      "id": "my-labels",
-      "type": "symbol",
-      "source": "labels",
-      "layout": {
-          "text-field": "{label_field}",
-          "text-font": ["Open Sans Semibold", "Arial Unicode MS Regular"],
-          "text-size": 10,
-          "text-justify": "center"
-      },
-      "paint": {
-          "text-color": "#FFFFFF",
-          "text-halo-width": 0,
-          "text-halo-blur": 0
-      },
-      filter: ['!=', ['string', ['get', 'label_field']], '1']
-    };
 
     const layer = new carto.Layer('layer', source, viz);
 
     layer.addTo(map, 'watername_ocean');
-    layer.on('loaded', onLayerLoaded);
+    
+    layer.on('loaded', () => {
+      // 1. Add Labels source
+      const labelSource = map
+        .addSource('labels', { type: 'geojson', data: null })
+        .getSource('labels');
+      
+      // 2. Add Labels layer
+      map.addLayer({
+        id: 'my-labels',
+        type: 'symbol',
+        source: 'labels',
+        layout: {
+          'text-field': '{label_field}',
+          'text-font': ['Open Sans Semibold', 'Arial Unicode MS Regular'],
+          'text-size': 10,
+          'text-justify': 'center'
+        },
+        paint: {
+          'text-color': '#FFFFFF',
+          'text-halo-width': 0,
+          'text-halo-blur': 0
+        },
+        filter: ['!=', ['string', ['get', 'label_field']], '1']
+      });
+      
+      // 3. Handle DOM changes
+      generateLegend();
 
-    function generateLegend() {
-      // Request data for legend from the layer viz
-      const legend = layer.viz.color.getLegendData();
-
-      // Create list elements for legend
-      const legendList = legend.data.map((legend, index) => {
-          const color = rgbToHex(legend.value);
-          const key = legend.key.toLowerCase().replace(' ', '-');
-          const checked = days.includes(legend.key);
-
-          // Use "js-checkbox" class to get all the checkbox elements from the widget
-          // Use "data-days-category" attribute to set the category for each checkbox
-          return `
-              <li>
-                  <input 
-                      id="js-checkbox-${key}"
-                      class="js-checkbox"
-                      type="checkbox"
-                      name="categories"
-                      data-days-category="${legend.key}"
-                  checked>
-                  <span class="point-mark" style="background-color:${color};"></span>
-                  <label for="js-checkbox-${key}">
-                      ${legend.key}
-                  </label>
-              </li>\n`;
-      }).join('');
-
-      document.getElementById('content').innerHTML = legendList;
-    }
-
-    function onLayerLoaded() {
-      map.addSource('labels', { type: 'geojson', data: null });
-      map.addLayer(LABELS_CONFIG);
-
-      const labelSource = map.getSource('labels');
-      let initialized = false;
+      // 4. Listen to update the labels
       layer.on('updated', () => {
-        if (!initialized) {
-            generateLegend();
-            setupWidget();
-            initialized = true;
-        }
-
-        const features = viz.variables.v_features.value;
-        updateLabels(features, labelSource);
+        updateLabels(labelSource);
       });
 
       hideLoader();
+    });
+
+    function generateLegend() {
+      // 1. Request data for legend from the layer viz
+      const legend = viz.color.getLegendData();
+
+      // 2. Create list elements for legend
+      const legendList = legend.data
+          .map(getListItemCheckboxHTML)
+          .join('');
+
+      // 3. Add the list to the widget content
+      document.getElementById('content').innerHTML = legendList;
+
+      // 4. Get all the category checkboxes
+      const checkboxes = document.getElementsByClassName('js-checkbox');
+
+      // 5. Add an event listener to each category checkbox
+      for (let i in checkboxes) {
+        const checkbox = checkboxes.item(i);
+        checkbox.addEventListener('change', toggleCategory);
+      };
     }
 
-    function updateLabels(features, source) {
-      const geojsonFeatures = features.map(feature => {
-          return {
-              "type": "Feature",
-              "geometry": {
-                  "type": "Point",
-                  "coordinates": feature.getRenderedCentroid()
-              },
-              "properties": {
-                  "label_field": `${feature.properties['count']}`
-              }
+    function updateLabels(source) {
+      const viewportFeatures = viz.variables.viewport_features.value;
+      const features = viewportFeatures.map(feature => {
+        return {
+          type: 'Feature',
+          geometry: {
+            type: 'Point',
+            coordinates: feature.getRenderedCentroid()
+          },
+          properties: {
+            label_field: `${feature.properties['count']}`
           }
+        }
       });
 
       source.setData({
-          type: 'FeatureCollection',
-          features: geojsonFeatures
+        type: 'FeatureCollection',
+        features
       });
     }
 
-      function setupWidget() {
-          // 1. Get all the category checkboxes
-          const checkboxes = document.getElementsByClassName('js-checkbox');
-          // 2. Add an event listener to each category checkbox
-          for (let i in checkboxes) {
-              const checkbox = checkboxes.item(i);
-              checkbox.addEventListener('change', toggleCategory);
-          };
-      }
+    function toggleCategory(event) {
+      // 1. Get the clicked checkbox element from the event
+      const checkboxElement = event.currentTarget;
+      // 2. Get the category through the "data-days-category" attribute
+      const category = checkboxElement.getAttribute('data-days-category');
+      // 3. Toggle the chosen category from the global days array
+      days = toggle(days, category);
+      // 4. Check / uncheck the checkbox element
+      checkboxElement.checked = days.includes(category);
+      // 5. Update the filter style property
+      viz.filter.blendTo(s.in(s.clusterMode(s.prop('incident_day_of_week')), days));
+    }
 
-      function toggleCategory(event) {
-          // 1. Get the clicked checkbox element from the event
-          const checkboxElement = event.currentTarget;
-          // 2. Get the category through the "data-days-category" attribute
-          const category = checkboxElement.getAttribute('data-days-category');
-          // 3. Toggle the chosen category from the global days array
-          days = _toggle(days, category);
-          // 4. Check / uncheck the checkbox element
-          checkboxElement.checked = days.includes(category);
-          // 5. Update the filter
-          viz.filter.blendTo(s.in(s.clusterMode(s.prop('incident_day_of_week')), days));
-      }
+    //** Helper Methods **//
 
-      //** Helper Methods **//
+    // Create a <li> HTML element with a checkbox
+    function getListItemCheckboxHTML(legend) {
+      const color = rgbToHex(legend.value);
+      const key = legend.key.toLowerCase().replace(' ', '-');
+      const checked = days.includes(legend.key);
 
-      // A function to convert map colors to HEX values for legend    
-      function rgbToHex(color) {
-          return "#" + ((1 << 24) + (color.r << 16) + (color.g << 8) + color.b).toString(16).slice(1);
-      }
+      return `
+        <li>
+          <input
+            id="js-checkbox-${key}"
+            class="js-checkbox"
+            type="checkbox"
+            name="categories"
+            data-days-category="${legend.key}"
+            checked>
+          <span class="point-mark" style="background-color:${color};"></span>
+          <label for="js-checkbox-${key}">${legend.key}</label>
+        </li>\n`;
+    }
 
-      // A function to toggle an element in an array  
-      function _toggle(arr, item) {
-          return arr.includes(item) ? arr.filter(i => i !== item) : [...arr, item];
-      }
+    // A function to convert map colors to HEX values for legend    
+    function rgbToHex(color) {
+      return "#" + ((1 << 24) + (color.r << 16) + (color.g << 8) + color.b).toString(16).slice(1);
+    }
+
+    // A function to toggle an element in an array  
+    function toggle(arr, item) {
+      return arr.includes(item) ? arr.filter(i => i !== item) : [...arr, item];
+    }
 
     function hideLoader() {
       document.getElementById('loader').style.opacity = '0';

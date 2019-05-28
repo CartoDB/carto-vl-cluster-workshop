@@ -2,7 +2,7 @@
 <html>
 
 <head>
-  <title>Step 5 | CARTO VL</title>
+  <title>Step 4 | CARTO VL</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta charset="UTF-8">
   <script src="https://libs.cartocdn.com/carto-vl/v1.2.6/carto-vl.min.js"></script>
@@ -35,8 +35,8 @@
     const map = new mapboxgl.Map({
       container: 'map',
       style: carto.basemaps.darkmatter,
-      center: [-122.411, 37.781],
-      zoom: 14,
+      center: [-122.411, 37.785],
+      zoom: 15,
       scrollZoom: false
     });
 
@@ -55,11 +55,11 @@
     const source = new carto.source.Dataset('sf_crime_2019');
     const viz = new carto.Viz(`
       @count: clusterCount()
-      @v_features: viewportFeatures(@count)
+      @viewport_features: viewportFeatures(@count)
 
       strokeWidth: 0
       width: @count / 10
-      color: opacity(ramp(clusterMODE($incident_category), bold), 0.8)
+      color: opacity(ramp(clusterMode($incident_category), bold), 0.8)
       
       resolution: 72
     `);
@@ -69,54 +69,74 @@
     layer.addTo(map, 'watername_ocean');
     
     layer.on('loaded', () => {
-      map.addSource('labels', { type: 'geojson', data: null });
-      const labelSource = map.getSource('labels');
-
-      const layerUpdated = function () {
-          const features = viz.variables.v_features.value;
-          const geojsonFeatures = features.map(feature => {
-              return {
-                  "type": "Feature",
-                  "geometry": {
-                      "type": "Point",
-                      "coordinates": feature.getRenderedCentroid()
-                  },
-                  "properties": {
-                      "label_field": `${feature.properties['count']}`
-                  }
-              }
-          });
-
-          labelSource.setData({
-              type: 'FeatureCollection',
-              features: geojsonFeatures
-          });
-      };
-
-      map.addLayer({
-        "id": "my-labels",
-        "type": "symbol",
-        "source": "labels",
-        "layout": {
-            "text-field": "{label_field}",
-            "text-font": ["Open Sans Semibold", "Arial Unicode MS Regular"],
-            "text-size": 10,
-            "text-justify": "center"
-        },
-        "paint": {
-            "text-color": "#FFFFFF",
-            "text-halo-width": 0,
-            "text-halo-blur": 0
-        },
-        filter: ['!=', ['string', ['get', 'label_field']], '1']
-      });
+      // 1. Create labels
+      const labelSource = map
+        .addSource('labels', {
+          type: 'geojson',
+          data: null
+        })
+        .addLayer({
+          id: 'my-labels',
+          type: 'symbol',
+          source: 'labels',
+          layout: {
+            'text-field': '{label_field}',
+            'text-font': ['Open Sans Semibold', 'Arial Unicode MS Regular'],
+            'text-size': 10,
+            'text-justify': 'center'
+          },
+          paint: {
+            'text-color': '#FFFFFF',
+            'text-halo-width': 0,
+            'text-halo-blur': 0
+          },
+          filter: ['!=', ['string', ['get', 'label_field']], '1']
+        })
+        .getSource('labels');
       
-      layer.on('updated', layerUpdated);
+      // 2. Listen to update the labels
+      layer.on('updated', () => {
+        updateLabels(labelSource);
+      });
+
+      // 3. Hide the loader
       hideLoader();
     });
 
+    function updateLabels(source) {
+      const viewportFeatures = viz.variables.viewport_features.value;
+      const features = viewportFeatures.map(feature => {
+        return {
+          type: 'Feature',
+          geometry: {
+            type: 'Point',
+            coordinates: feature.getRenderedCentroid()
+          },
+          properties: {
+            label_field: `${formatToUnits(feature.properties['count'])}`
+          }
+        }
+      });
+
+      source.setData({
+        type: 'FeatureCollection',
+        features
+      });
+    }
+
     function hideLoader() {
       document.getElementById('loader').style.opacity = '0';
+    }
+
+    function formatToUnits(number, precision=2) {
+      const abbrev = ['', 'k', 'm', 'b', 't'];
+      const unrangifiedOrder = Math.floor(Math.log10(Math.abs(number)) / 3)
+      const order = Math.max(0, Math.min(unrangifiedOrder, abbrev.length -1 ))
+      const suffix = abbrev[order];
+
+      return suffix
+        ? `${(number / Math.pow(10, order * 3)).toFixed(precision) + suffix}`
+        : `${number}`;
     }
   </script>
 </body>
