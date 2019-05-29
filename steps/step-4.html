@@ -8,7 +8,7 @@
   <script src="https://libs.cartocdn.com/carto-vl/v1.2.6/carto-vl.min.js"></script>
   <script src="https://api.tiles.mapbox.com/mapbox-gl-js/v0.52.0/mapbox-gl.js"></script>
   <link href="https://api.tiles.mapbox.com/mapbox-gl-js/v0.52.0/mapbox-gl.css" rel="stylesheet" />
-  <link href="https://carto.com/developers/carto-vl/v1.2.6/examples/maps/style.css" rel="stylesheet">
+  <link href="https://libs.cartocdn.com/carto-vl-examples/style.css" rel="stylesheet">
 </head>
 
 <body>
@@ -87,9 +87,9 @@
             'text-justify': 'center'
           },
           paint: {
-            'text-color': '#FFFFFF',
-            'text-halo-width': 0,
-            'text-halo-blur': 0
+            'text-color': '#fff',
+            'text-halo-color': 'rgba(55,55,55,0.4)',
+            'text-halo-width': 1.5
           },
           filter: ['!=', ['string', ['get', 'label_field']], '1']
         })

@@ -8,7 +8,7 @@
   <script src="https://libs.cartocdn.com/carto-vl/v1.2/carto-vl.min.js"></script>
   <script src="https://api.tiles.mapbox.com/mapbox-gl-js/v0.52.0/mapbox-gl.js"></script>
   <link href="https://api.tiles.mapbox.com/mapbox-gl-js/v0.52.0/mapbox-gl.css" rel="stylesheet" />
-  <link href="https://carto.com/developers/carto-vl/v1.2.6/examples/maps/style.css" rel="stylesheet">
+  <link href="https://libs.cartocdn.com/carto-vl-examples/style.css" rel="stylesheet">
 </head>
 
 <body>
@@ -85,8 +85,8 @@
       
       resolution: 32
       //order: asc(width())
-      
-      filter: @cluster_mode_day in @days
+
+      filter: 0
     `);
 
     const layer = new carto.Layer('layer', source, viz);
@@ -124,7 +124,6 @@
       generateSelectors();
       
       // 4. Listen to layer update
-
       layer.on('updated', () => {
         updateLabels(labelSource);
       });
@@ -220,7 +219,8 @@
 
     // Create a <li> HTML element with a checkbox
     function getListItemCheckboxHTML(legend) {
-      const color = rgbToHex(legend.value);
+      const color = legend.value;
+      const RGBColor = `rgb(${color.r}, ${color.g}, ${color.b})`;
       const key = legend.key.toLowerCase().replace(' ', '-');
       const checked = days.includes(legend.key);
 
@@ -233,7 +233,7 @@
             name="categories"
             data-days-category="${legend.key}"
             checked>
-          <span class="point-mark" style="background-color:${color};"></span>
+          <span class="point-mark" style="background-color:${RGBColor};"></span>
           <label for="js-checkbox-${key}">${legend.key}</label>
         </li>\n`;
     }
@@ -244,11 +244,6 @@
                 class="js-option"
                 value="${category.name}">${category.name}
               </option>`;
-    }
-
-    // A function to convert map colors to HEX values for legend    
-    function rgbToHex(color) {
-      return "#" + ((1 << 24) + (color.r << 16) + (color.g << 8) + color.b).toString(16).slice(1);
     }
 
     // A function to toggle an element in an array  

@@ -8,7 +8,7 @@
   <script src="https://libs.cartocdn.com/carto-vl/v1.2/carto-vl.min.js"></script>
   <script src="https://api.tiles.mapbox.com/mapbox-gl-js/v0.52.0/mapbox-gl.js"></script>
   <link href="https://api.tiles.mapbox.com/mapbox-gl-js/v0.52.0/mapbox-gl.css" rel="stylesheet" />
-  <link href="https://carto.com/developers/carto-vl/v1.2.6/examples/maps/style.css" rel="stylesheet">
+  <link href="https://libs.cartocdn.com/carto-vl-examples/style.css" rel="stylesheet">
 </head>
 
 <body>
@@ -71,18 +71,13 @@
       @count: clusterCount()
       @viewport_features: viewportFeatures(@count)
 
-      //strokeWidth: 0
-      //width: sqrt(@count)
-      //color: ramp(@cluster_mode_day, bold)
-      
-      //resolution: 16
-      //order: asc(width())
-
-      width: sqrt(@count)*2.5
-      color: ramp(buckets(@cluster_mode_day, @days), bold)
+      width: sqrt(@count) * 2.5
+      color: ramp(@cluster_mode_day, bold)
+      //color: ramp(buckets(@cluster_mode_day, @days), bold)
       strokeWidth: 2
       strokeColor: rgba(255,255,255,0.2)
       
+      //order: asc(width())
       resolution: 32
       
       filter: @cluster_mode_day in @days
@@ -189,7 +184,8 @@
 
     // Create a <li> HTML element with a checkbox
     function getListItemCheckboxHTML(legend) {
-      const color = rgbToHex(legend.value);
+      const color = legend.value;
+      const RGBColor = `rgb(${color.r}, ${color.g}, ${color.b})`;
       const key = legend.key.toLowerCase().replace(' ', '-');
       const checked = days.includes(legend.key);
 
@@ -202,14 +198,9 @@
             name="categories"
             data-days-category="${legend.key}"
             checked>
-          <span class="point-mark" style="background-color:${color};"></span>
+          <span class="point-mark" style="background-color:${RGBColor};"></span>
           <label for="js-checkbox-${key}">${legend.key}</label>
         </li>\n`;
-    }
-
-    // A function to convert map colors to HEX values for legend    
-    function rgbToHex(color) {
-      return "#" + ((1 << 24) + (color.r << 16) + (color.g << 8) + color.b).toString(16).slice(1);
     }
 
     // A function to toggle an element in an array  
@@ -220,8 +211,6 @@
     function hideLoader() {
       document.getElementById('loader').style.opacity = '0';
     }
-
-    
   </script>
 </body>
 
