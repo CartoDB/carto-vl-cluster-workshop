@@ -4,10 +4,7 @@
 
 This is the content for the CARTO VL Webinar "Discover the Power of CARTO VL for Visual and Interactive Analysis". Through these seven steps, you'll understand how cluster aggregation works and how to create an interactive map.
 
-<video width="600" height="400" controls>
-  <source src="/steps/video/final-map.mp4" type="video/mp4">
-Your browser does not support the video tag.
-</video>
+![Final Map Example](/steps/img/final-map.gif)
 
 ## Data
 
