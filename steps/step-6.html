@@ -71,19 +71,26 @@
       @count: clusterCount()
       @viewport_features: viewportFeatures(@count)
 
-      strokeWidth: 0
-      width: sqrt(@count)
-      color: ramp(@cluster_mode_day, bold)
+      //strokeWidth: 0
+      //width: sqrt(@count)
+      //color: ramp(@cluster_mode_day, bold)
       
-      resolution: 16
-      order: asc(width())
+      //resolution: 16
+      //order: asc(width())
+
+      width: sqrt(@count)*2.5
+      color: ramp(buckets(@cluster_mode_day, @days), bold)
+      strokeWidth: 2
+      strokeColor: rgba(255,255,255,0.2)
+      
+      resolution: 32
       
       filter: @cluster_mode_day in @days
     `);
 
     const layer = new carto.Layer('layer', source, viz);
 
-    layer.addTo(map, 'watername_ocean');
+    layer.addTo(map);
     
     layer.on('loaded', () => {
       // 1. Add Labels source
@@ -91,21 +98,22 @@
         .addSource('labels', { type: 'geojson', data: null })
         .getSource('labels');
       
-      // 2. Add Labels layer
-      map.addLayer({
+       // 2. Add Labels layer
+       map.addLayer({
         id: 'my-labels',
         type: 'symbol',
         source: 'labels',
         layout: {
           'text-field': '{label_field}',
-          'text-font': ['Open Sans Semibold', 'Arial Unicode MS Regular'],
-          'text-size': 10,
+          'text-font': ['Open Sans Regular', 'Arial Unicode MS Regular'],
+          //'text-size': 10,
+          'text-size': ['*', ['number', ['get', 'label_field']], 0.015],
           'text-justify': 'center'
         },
         paint: {
-          'text-color': '#FFFFFF',
-          'text-halo-width': 0,
-          'text-halo-blur': 0
+          'text-color': '#fff',
+          'text-halo-color': 'rgba(55,55,55,0.4)',
+          'text-halo-width': 1.5
         },
         filter: ['!=', ['string', ['get', 'label_field']], '1']
       });
@@ -212,6 +220,8 @@
     function hideLoader() {
       document.getElementById('loader').style.opacity = '0';
     }
+
+    
   </script>
 </body>
 
