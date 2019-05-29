@@ -108,7 +108,7 @@
           'text-field': '{label_field}',
           'text-font': ['Open Sans Regular', 'Arial Unicode MS Regular'],
           //'text-size': 10,
-          'text-size': ['*', ['number', ['get', 'label_field']], 0.015],
+          'text-size': ['*', ['number', ['get', 'label_number']], 0.015],
           'text-justify': 'center'
         },
         paint: {
@@ -163,7 +163,8 @@
             coordinates: feature.getRenderedCentroid()
           },
           properties: {
-            label_field: `${feature.properties['count']}`
+            label_field: `${feature.properties['count']}`,
+            label_number: feature.properties['count']
           }
         }
       });
