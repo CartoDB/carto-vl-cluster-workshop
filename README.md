@@ -15,14 +15,14 @@ We're using a dataset based on the [Police Department Incident Reports](https://
 ### 1. Create the basic structure from an example
 
 * [CARTO VL examples](https://carto.com/developers/carto-vl/examples/)
-* [Source](step-1.html)
+* [Source](/steps/step-1.html)
 
 ![Step 1 - Basic CARTO VL map](/steps/img/step-1.png)
 
 ### 2. Add your credentials and change settings
 
 * [Getting Started Guide](https://carto.com/developers/carto-vl/guides/getting-started/)
-* [Source](step-2.html)
+* [Source](/steps/step-2.html)
 
 Notes:
 
@@ -34,7 +34,7 @@ Notes:
 ### 3. Style by using cluster count
 
 * [clusterCount Expression](https://carto.com/developers/carto-vl/reference/#cartoexpressionsclustercount)
-* [Source](step-3.html)
+* [Source](/steps/step-3.html)
 
 Notes:
 
@@ -49,7 +49,7 @@ Notes:
 * [Points labels CARTO VL example](https://carto.com/developers/carto-vl/examples/#example-point-labels)
 * [Label Cluster Count](https://carto.com/developers/carto-vl/examples/#example-label-cluster-counts)
 * [Mapbox label documentation](https://docs.mapbox.com/mapbox-gl-js/example/display-and-style-rich-text-labels/)
-* [Source](step-4.html)
+* [Source](/steps/step-4.html)
 
 ![Step 4 - Add labels using Mapbox](/steps/img/step-4.png)
 
@@ -63,6 +63,7 @@ Notes:
 ### 5. Use clusterMode expression to color the clusters
 
 * [clusterMode expression](https://carto.com/developers/carto-vl/reference/#cartoexpressionsclustermode)
+* [Source](/steps/step-5.html)
 
 Notes:
 
@@ -74,6 +75,7 @@ Notes:
 ### 6. Visualize incidents by day using an interactive based filter
 
 * [Interactive based filter CARTO VL example](https://carto.com/developers/carto-vl/examples/#example-interactive-based-filter)
+* [Source](/steps/step-6.html)
 
 Notes:
 
@@ -92,6 +94,8 @@ Notes:
 ![Step 6 - Add an interactive based filter](/steps/img/step-6.png)
 
 ### 7. Use a dropdown to filter by categories
+
+* [Source](/steps/step-7.html)
 
 Notes:
 
